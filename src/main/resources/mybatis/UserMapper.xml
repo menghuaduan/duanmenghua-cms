@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mapper.UserMapper">
+
+
+	<!-- 验证账号唯一性 -->
+	<select id="findByUsername" resultType="com.bean.User">
+		SELECT id,username,`password`,role,locked FROM `cms_user` WHERE username = #{username}
+		 AND locked='0'
+	</select>
+	
+	<!-- 根据编号查找用户-->
+	<select id="findById" resultType="com.bean.User">
+		SELECT id,username,`password`,role,locked FROM `cms_user` WHERE id = #{value}
+	</select>
+	
+	<!-- 注册账号 -->
+	<insert id="register">
+		INSERT INTO `1706e`.`cms_user` (`username`, `password`, `gender`, `update_time`) VALUES
+		 (#{username}, #{password}, #{gender}, now())
+	</insert>
+	
+	
+	<!-- 根据名称查找用户 -->
+	<select id="findByName" resultType="com.bean.User">
+		SELECT id,username,password,locked FROM cms_user WHERE username=#{username}
+		 limit 1
+	</select>
+	
+	<!-- 查询所有用户 -->
+	<select id="findUser" resultType="com.bean.User">
+		SELECT id,username,locked,create_time,update_time,gender FROM `cms_user`
+	</select>
+	
+	<!-- 改变用户的状态 -->
+	<update id="chageUser">
+		UPDATE `1706e`.`cms_user` SET `locked` = #{locked} WHERE `id` = #{id}
+	</update>
+</mapper>

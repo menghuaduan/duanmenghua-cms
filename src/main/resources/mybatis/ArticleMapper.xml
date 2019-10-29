@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mapper.ArticleMapper">
+
+	<!-- 做一个返回值类型 -->
+		<resultMap type="article" id="articleMapper">
+		<id column="id" property="id" />
+		<result column="channel_id" property="channelId"/>
+		<result column="category_id" property="categoryId"/>
+		<!-- 文章类型 -->
+		<result column="articleType" property="articleType" 
+		   typeHandler="org.apache.ibatis.type.EnumOrdinalTypeHandler"
+		   jdbcType="INTEGER" javaType="com.comon.ArticleType"/>
+		<result column="user_id" property="userId"/>
+		
+		 <association property="user" column="user_id" 
+		   select="com.mapper.UserMapper.findById" />
+		   
+	    <association property="channel" column="channel_id" 
+		   select="com.mapper.IndexMapper.findById" />
+		   
+		<association property="cat" column="category_id" 
+		   select="com.mapper.CatMapper.findById" />
+		   
+		   <!--标签 -->
+		<association property="tags" column="id" 
+		   select="findTagsByArticleId" />   
+	</resultMap> 
+	
+	<!-- 查询文章标签 -->
+	<select id="findTagsByArticleId" resultType="java.lang.String">
+		SELECT GROUP_CONCAT(tagname) tags 
+  			FROM cms_article_tag_middle m  JOIN cms_tag  t on m.tid=t.id 
+  			WHERE m.aid= #{value}
+			GROUP BY m.aid
+	</select>
+	
+	<!-- 根据文章的分类和频道获取文章 -->
+	<select id="list" resultMap="articleMapper">
+		SELECT id,title,picture,channel_id,category_id,user_id,articleType
+		        hits,hot,status,created,updated,commentCnt
+		 FROM cms_article
+		 WHERE channel_id=#{chnId}
+		 <if test="catId!=0">
+		 	AND category_id=#{catId}
+		 </if> 
+		  AND status=1   AND deleted=0      
+	</select>
+	
+	<!-- 获取热门文章 -->
+	<select id="hostlist"  resultMap="articleMapper">
+		SELECT id,title,picture,channel_id,category_id,user_id,
+		        hits,hot,status,created,updated,commentCnt
+		 FROM cms_article
+		 	WHERE hot>0
+		 	AND deleted=0
+		 	ORDER BY hot DESC,created DESC
+	</select>
+	
+	<!-- 获取最新文章 -->
+	<select id="last"  resultMap="articleMapper">
+		SELECT id,title,picture,channel_id,category_id,user_id,
+		        hits,hot,status,created,updated,commentCnt
+		 FROM cms_article
+		 	WHERE deleted=0 AND status=1
+		 	ORDER BY created DESC limit #{value}
+	</select>
+	
+	<!-- 获取友情链接 -->
+	<select id="blogroll" resultType="com.bean.Blogroll">
+			SELECT * FROM `cms_blogroll`
+		 	ORDER BY bid DESC limit #{value}
+	</select>
+	
+	<!-- 根据编号获取文章 -->
+	<select id="findById" resultMap="articleMapper">
+		SELECT id,title,picture,content,channel_id,category_id,user_id,articleType,
+		        hits,hot,status,created,updated,commentCnt
+		 FROM cms_article
+		 WHERE id=#{articleId}
+		 AND deleted=0
+	</select>
+	
+	<!-- 添加文章 -->
+	<insert id="add"  useGeneratedKeys="true" keyColumn="id" keyProperty="id">
+		INSERT INTO cms_article(title,content,picture,channel_id,category_id,user_id,hits,hot,status,deleted,created,updated,commentCnt,articleType)
+		  values(#{title},#{content},#{picture},#{channelId},#{categoryId},#{userId},0,0,0,0,now(),now(),0,
+		   #{articleType, typeHandler=org.apache.ibatis.type.EnumOrdinalTypeHandler,
+		   jdbcType=INTEGER, javaType=com.comon.ArticleType})
+	</insert>
+	
+	
+	<!-- 根据用户id查找文章 -->
+	<select id="listByUserId" resultMap="articleMapper">
+		SELECT id,title,picture,user_id,channel_id,category_id,
+		        hits,hot,status,created,updated,commentCnt
+		 FROM cms_article
+		 WHERE user_id=#{value}
+		   AND deleted=0
+	</select>
+	
+	<!-- 获取需要管理的文章 -->
+	<select id="listAdmin" resultMap="articleMapper">
+		SELECT id,title,picture,channel_id,category_id,user_id,
+		        hits,hot,status,created,updated
+		 FROM cms_article 
+		 	WHERE deleted=0
+		 	
+		 	<!-- 老师写的0,我觉得不对，自己改了，错了再来改 -->
+		 	<if test="status !=2">
+		 		AND status=#{status} 	
+		 	</if>
+		 	ORDER BY created DESC 
+	</select>
+	
+	<!-- 添加标签 并且返回新标签的主键-->
+	<insert id="addTag" useGeneratedKeys="true" keyColumn="id" keyProperty="id">
+		INSERT INTO cms_tag(tagname) values(#{tagname})
+	</insert>
+</mapper>
+  
+  

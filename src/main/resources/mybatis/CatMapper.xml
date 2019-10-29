@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mapper.CatMapper">
+	<select id="findCatBychnId" resultType="com.bean.Category">
+		SELECT id,`name`,channel_id  channelid FROM `cms_category` 
+		WHERE channel_id = #{chnId}
+	</select>
+	
+	<select id="findById" resultType="com.bean.Category">
+		SELECT * FROM cms_category WHERE id = #{value} limit 1
+	</select>
+</mapper>
